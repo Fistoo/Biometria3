@@ -41,7 +41,7 @@ public class HelloController {
         imageOrginal.setFitHeight(150);
         width = (int)img.getWidth();
         height = (int)img.getHeight();
-        Niblack(20,0.6);
+        Niblack(15,-1.5);
     }
 
     @FXML
@@ -50,39 +50,35 @@ public class HelloController {
     }
 
 
-    public void Niblack (double inputWindow, double k1) throws IOException {
-
-
+    public void Niblack (int window, double k1) throws IOException {
         BufferedImage imageO = ImageIO.read(selectedFile);
         BufferedImage img = ImageIO.read(selectedFile);
 
+        int iB, iG, iR, rgb, sum, num;
+        double area, mean, standardDeviation, average;
 
-        int window = (int) inputWindow;
+        int pixelRgb, pixelR, pixelG, pixelB, pixelA;
+        double NiBlack;
+
 
         for (int column = 0; column < width; column++) {
             for (int row = 0; row < height; row++) {
-                int iB   = 0;
-                int iG   = 0;
-                int iR   = 0;
-                int sum;
-                int rgb;
+
+                iR = iG = iB = 0;
                 for(int ji = -window; ji < window; ji++){
                     for(int jj = -window; jj < window; jj++){
-                        if(column + ji >= 0 && column + ji < width){
-                            if(row + jj >= 0 && row + jj < height){
-                                rgb = imageO.getRGB(column + ji, row + jj);
-                                iR += rgb & 0xff0000 >> 16;
-                                iG += rgb & 0x00ff00 >> 8;
-                                iB += rgb & 0xff;
-                            }
+                        if((column + ji >= 0 && column + ji < width)&&(row + jj >= 0 && row + jj < height)){
+                            rgb = imageO.getRGB(column + ji, row + jj);
+                            iR += rgb & 0xff0000 >> 16;
+                            iG += rgb & 0x00ff00 >> 8;
+                            iB += rgb & 0xff;
                         }
                     }
                 }
                 sum = (iR + iG + iB) / 3;
-                double area = (window*2)*(window*2);
-                double standardDeviation = 0.0;
-                double mean = sum/area;
-                int num;
+                area = (window)*(window)*4;
+                standardDeviation = 0.0;
+                mean = sum/area;
                 for(int ji = -window; ji < window; ji++){
                     for(int jj = -window; jj < window; jj++){
                         if(column + ji >= 0 && column + ji < width){
@@ -97,25 +93,20 @@ public class HelloController {
                         }
                     }
                 }
-                double SD = Math.sqrt(standardDeviation/area);
-                int pixelRgb = img.getRGB(column, row);
-                int pixelR = pixelRgb & 0xff0000 >> 16;
-                int pixelG = pixelRgb & 0x00ff00 >> 8;
-                int pixelB = pixelRgb & 0xff;
-                int pixelA = (pixelR + pixelG + pixelB) / 3;
-                double average = sum / area;
-                double k = k1;
+                standardDeviation = Math.sqrt(standardDeviation/area);
+                pixelRgb = img.getRGB(column, row);
+                pixelR = pixelRgb & 0xff0000 >> 16;
+                pixelG = pixelRgb & 0x00ff00 >> 8;
+                pixelB = pixelRgb & 0xff;
+                pixelA = (pixelR + pixelG + pixelB) / 3;
+                average = sum / area;
 
-                //***********************************//
+                NiBlack = average + k1 * standardDeviation;
 
-                //Wzór NiBlaca
-                double NiBlack = average + k * SD;
-
-                //***********************************//
                 if(pixelA > NiBlack)
                     img.setRGB(column, row, 0xffffffff);
                 else
-                    img.setRGB(column, row, 0x00000000);
+                    img.setRGB(column, row, 0xff000000);
             }
         }
 
@@ -141,14 +132,6 @@ public class HelloController {
         return new ImageView(wr).getImage();
     }
 
-    static BufferedImage deepCopy(BufferedImage bi)
-    {
-        ColorModel cm = bi.getColorModel();
-        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
-        WritableRaster raster = bi.copyData(null);
-
-        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
-    }
 
 
 }
